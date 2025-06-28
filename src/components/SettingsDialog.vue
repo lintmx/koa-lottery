@@ -147,6 +147,7 @@ const exportData = () => {
       results: lotteryStore.results,
       currentPrize: lotteryStore.currentPrize,
       isDrawing: lotteryStore.isDrawing,
+      showResult: lotteryStore.showResult,
       settings: lotteryStore.settings
     }
 
