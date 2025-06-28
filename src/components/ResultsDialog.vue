@@ -1,10 +1,5 @@
 <template>
-  <el-dialog
-    v-model="visible"
-    title="抽奖结果"
-    width="80%"
-    @close="handleClose"
-  >
+  <el-dialog v-model="visible" title="抽奖结果" width="80%" @close="handleClose">
     <div class="results-container">
       <!-- 结果统计 -->
       <div class="stats-overview">
@@ -32,76 +27,21 @@
         <el-button @click="printResults" type="info" :icon="Printer">
           打印结果
         </el-button>
-        <el-select
-          v-model="selectedPrizeFilter"
-          placeholder="按奖品筛选"
-          clearable
-          style="width: 200px; margin-left: 10px;"
-        >
-          <el-option
-            v-for="prize in lotteryStore.prizes"
-            :key="prize.id"
-            :label="prize.name"
-            :value="prize.id"
-          />
+        <el-select v-model="selectedPrizeFilter" placeholder="按奖品筛选" clearable style="width: 200px; margin-left: 10px;">
+          <el-option v-for="prize in lotteryStore.prizes" :key="prize.id" :label="prize.name" :value="prize.id" />
         </el-select>
       </div>
 
       <!-- 结果列表 -->
       <div class="results-table">
-        <el-table
-          :data="filteredResults"
-          border
-          stripe
-          max-height="500"
-          @sort-change="handleSort"
-        >
-          <el-table-column
-            prop="roundNumber"
-            label="轮次"
-            width="80"
-            sortable="custom"
-          />
-          <el-table-column
-            prop="prizeName"
-            label="奖品"
-            width="150"
-            sortable="custom"
-          />
-          <el-table-column
-            prop="participantName"
-            label="中奖者"
-            width="120"
-            sortable="custom"
-          />
-          <el-table-column
-            prop="participantEmail"
-            label="邮箱"
-            width="180"
-            :formatter="emailFormatter"
-          />
-          <el-table-column
-            prop="participantDepartment"
-            label="部门"
-            width="120"
-            :formatter="departmentFormatter"
-          />
-          <el-table-column
-            prop="timestamp"
-            label="中奖时间"
-            width="180"
-            sortable="custom"
-            :formatter="timeFormatter"
-          />
-          <el-table-column label="操作" width="100" fixed="right">
+        <el-table :data="filteredResults" border stripe max-height="500" @sort-change="handleSort">
+          <el-table-column prop="roundNumber" label="轮次" width="100" sortable="custom" />
+          <el-table-column prop="prizeName" label="奖品" width="200" sortable="custom" />
+          <el-table-column prop="participantName" label="中奖者" width="200" sortable="custom" />
+          <el-table-column prop="timestamp" label="中奖时间" min-width="180" sortable="custom" :formatter="timeFormatter" />
+          <el-table-column label="操作" width="120" fixed="right">
             <template #default="{ row }">
-              <el-button
-                @click="removeResult(row.id)"
-                type="danger"
-                size="small"
-                text
-                :icon="Delete"
-              >
+              <el-button @click="removeResult(row.id)" type="danger" size="small" text :icon="Delete">
                 删除
               </el-button>
             </template>
@@ -113,11 +53,7 @@
       <div class="prize-groups" v-if="!selectedPrizeFilter">
         <h3>按奖品分组</h3>
         <el-collapse v-model="activeCollapse">
-          <el-collapse-item
-            v-for="group in prizeGroups"
-            :key="group.prizeId"
-            :name="group.prizeId"
-          >
+          <el-collapse-item v-for="group in prizeGroups" :key="group.prizeId" :name="group.prizeId">
             <template #title>
               <div class="group-title">
                 <span class="prize-name">{{ group.prizeName }}</span>
@@ -128,14 +64,8 @@
             </template>
             <div class="group-content">
               <el-table :data="group.results" size="small">
-                <el-table-column prop="participantName" label="中奖者" />
-                <el-table-column prop="participantEmail" label="邮箱" />
-                <el-table-column prop="participantDepartment" label="部门" />
-                <el-table-column
-                  prop="timestamp"
-                  label="中奖时间"
-                  :formatter="timeFormatter"
-                />
+                <el-table-column prop="participantName" label="中奖者" width="200" />
+                <el-table-column prop="timestamp" label="中奖时间" min-width="180" :formatter="timeFormatter" />
               </el-table>
             </div>
           </el-collapse-item>
@@ -228,38 +158,14 @@ const prizeGroups = computed(() => {
       prizeId: prize.id,
       prizeName: prize.name,
       totalCount: prize.count,
-      results: results.map(r => ({
-        ...r,
-        participantEmail: getParticipantEmail(r.participantId),
-        participantDepartment: getParticipantDepartment(r.participantId)
-      }))
+      results
     }
   })
 
   return groups.filter(g => g.results.length > 0)
 })
 
-// 获取参与者邮箱
-const getParticipantEmail = (participantId: string) => {
-  const participant = lotteryStore.participants.find(p => p.id === participantId)
-  return participant?.email || '-'
-}
-
-// 获取参与者部门
-const getParticipantDepartment = (participantId: string) => {
-  const participant = lotteryStore.participants.find(p => p.id === participantId)
-  return participant?.department || '-'
-}
-
 // 表格格式化函数
-const emailFormatter = (row: LotteryResult) => {
-  return getParticipantEmail(row.participantId)
-}
-
-const departmentFormatter = (row: LotteryResult) => {
-  return getParticipantDepartment(row.participantId)
-}
-
 const timeFormatter = (row: LotteryResult) => {
   return new Date(row.timestamp).toLocaleString('zh-CN')
 }
@@ -277,8 +183,6 @@ const exportResults = () => {
       轮次: result.roundNumber,
       奖品: result.prizeName,
       中奖者: result.participantName,
-      邮箱: getParticipantEmail(result.participantId),
-      部门: getParticipantDepartment(result.participantId),
       中奖时间: new Date(result.timestamp).toLocaleString('zh-CN')
     }))
 
@@ -346,8 +250,6 @@ const generatePrintContent = () => {
             <th>轮次</th>
             <th>奖品</th>
             <th>中奖者</th>
-            <th>邮箱</th>
-            <th>部门</th>
             <th>中奖时间</th>
           </tr>
         </thead>
@@ -360,8 +262,6 @@ const generatePrintContent = () => {
         <td>${result.roundNumber}</td>
         <td>${result.prizeName}</td>
         <td>${result.participantName}</td>
-        <td>${getParticipantEmail(result.participantId)}</td>
-        <td>${getParticipantDepartment(result.participantId)}</td>
         <td>${new Date(result.timestamp).toLocaleString('zh-CN')}</td>
       </tr>
     `
